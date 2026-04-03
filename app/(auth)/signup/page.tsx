@@ -26,8 +26,7 @@ export default function SignupPage() {
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Account created! Welcome 🎉');
-    router.push('/dashboard');
-    router.refresh();
+    window.location.href = '/dashboard';
   }
 
   return (

@@ -21,8 +21,7 @@ export default function LoginPage() {
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Welcome back!');
-    router.push('/dashboard');
-    router.refresh();
+    window.location.href = '/dashboard';
   }
 
   return (
