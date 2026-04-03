@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Award points for plan creation
-    await supabase.from('profiles').update({ total_points: (await supabase.from('profiles').select('total_points').eq('id', user.id).single()).data?.total_points + 20 }).eq('id', user.id).catch(() => {});
+    try { const { data: p } = await supabase.from('profiles').select('total_points').eq('id', user.id).single(); await supabase.from('profiles').update({ total_points: (p?.total_points ?? 0) + 20 }).eq('id', user.id); } catch { /* optional */ }
 
     return NextResponse.json({ planId: savedPlan.id, daysCount: plan.daily_plans.length });
   } catch (e) {

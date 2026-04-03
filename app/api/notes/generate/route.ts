@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Award points
-    await supabase.from('profiles').update({ total_points: (await supabase.from('profiles').select('total_points').eq('id', user.id).single()).data?.total_points + 30 }).eq('id', user.id).catch(() => {});
+    try { const { data: p } = await supabase.from('profiles').select('total_points').eq('id', user.id).single(); await supabase.from('profiles').update({ total_points: (p?.total_points ?? 0) + 30 }).eq('id', user.id); } catch { /* optional */ }
 
     return NextResponse.json({ notes: savedNotes, count: savedNotes.length });
   } catch (e) {
