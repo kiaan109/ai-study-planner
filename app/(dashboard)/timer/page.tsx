@@ -73,7 +73,7 @@ function TimerPageInner() {
     });
     // Award points
     const pts = Math.floor(seconds / 60);
-    await supabase.rpc('increment_points', { user_id: user.id, points: pts }).catch(() => {});
+    try { await supabase.rpc('increment_points', { user_id: user.id, points: pts }); } catch { /* optional RPC */ }
     toast.success(`Session saved! +${pts} pts`);
     setSeconds(0);
     fetchData();
