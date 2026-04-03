@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Eye, EyeOff } from 'lucide-react';
-import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -53,19 +53,6 @@ export default function LoginPage() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm animate-in">
-          {!isSupabaseConfigured && (
-            <div className="mb-6 p-4 rounded-xl border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-sm text-yellow-800 dark:text-yellow-300">Supabase not configured</p>
-                <p className="text-xs mt-1 text-yellow-700 dark:text-yellow-400">
-                  Add your Supabase URL and keys to <code className="font-mono">.env.local</code> to enable login.{' '}
-                  <a href="https://supabase.com" target="_blank" rel="noreferrer" className="underline">Create a free project →</a>
-                </p>
-              </div>
-            </div>
-          )}
-
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold mb-2">Welcome back</h1>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>Sign in to continue studying</p>
