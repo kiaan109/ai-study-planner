@@ -5,7 +5,8 @@ import { generateStudyPlan } from '@/lib/ai/generateStudyPlan';
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { title, examDate, hoursPerDay, subjects } = await req.json();

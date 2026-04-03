@@ -11,3 +11,5 @@ start-dev.cmd
 .env.local
 .env.local.example
 *.log
+
+.vercel
