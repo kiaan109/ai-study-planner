@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Eye, EyeOff, Chrome } from 'lucide-react';
+import { BookOpen, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
@@ -25,15 +25,9 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    toast.success('Account created! Please check your email to confirm.');
-    router.push('/login');
-  }
-
-  async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
-    });
+    toast.success('Account created! Welcome 🎉');
+    router.push('/dashboard');
+    router.refresh();
   }
 
   return (
@@ -65,17 +59,6 @@ export default function SignupPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold mb-2">Create account</h1>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>Free forever · No credit card needed</p>
-          </div>
-
-          <button onClick={handleGoogle} className="btn-secondary w-full flex items-center justify-center gap-3 mb-6 py-3">
-            <Chrome className="w-5 h-5 text-blue-500" />
-            Continue with Google
-          </button>
-
-          <div className="relative flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-xs" style={{ color: 'var(--muted)' }}>or email</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">

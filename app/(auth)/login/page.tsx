@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Eye, EyeOff, Chrome, AlertTriangle } from 'lucide-react';
+import { BookOpen, Eye, EyeOff } from 'lucide-react';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
@@ -23,13 +23,6 @@ export default function LoginPage() {
     toast.success('Welcome back!');
     router.push('/dashboard');
     router.refresh();
-  }
-
-  async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
-    });
   }
 
   return (
@@ -76,17 +69,6 @@ export default function LoginPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold mb-2">Welcome back</h1>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>Sign in to continue studying</p>
-          </div>
-
-          <button onClick={handleGoogle} disabled={!isSupabaseConfigured} className="btn-secondary w-full flex items-center justify-center gap-3 mb-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-            <Chrome className="w-5 h-5 text-blue-500" />
-            Continue with Google
-          </button>
-
-          <div className="relative flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-xs" style={{ color: 'var(--muted)' }}>or email</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
