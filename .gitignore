@@ -1,0 +1,13 @@
+.next/
+node_modules/
+out/
+build/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+install.ps1
+dev.ps1
+start-dev.cmd
+.env.local
+.env.local.example
+*.log
