@@ -6,7 +6,7 @@ import SyllabusUpload from '@/components/subjects/SyllabusUpload';
 import SubjectCard from '@/components/subjects/SubjectCard';
 import { createClient } from '@/lib/supabase/client';
 import { Subject } from '@/types';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SubjectsPage() {
@@ -36,15 +36,31 @@ export default function SubjectsPage() {
     toast.success('Subject deleted');
   }
 
+  async function deleteAllSubjects() {
+    if (!confirm('Delete ALL subjects? This cannot be undone.')) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('subjects').delete().eq('user_id', user.id);
+    setSubjects([]);
+    toast.success('All subjects deleted');
+  }
+
   return (
     <div className="animate-in">
       <Header title="Subjects" subtitle="Manage your subjects and chapters" />
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm" style={{ color: 'var(--muted)' }}>{subjects.length} subject{subjects.length !== 1 ? 's' : ''}</p>
-          <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Upload Syllabus
-          </button>
+          <div className="flex items-center gap-2">
+            {subjects.length > 0 && (
+              <button onClick={deleteAllSubjects} className="btn-secondary flex items-center gap-2 text-red-500 hover:text-red-600">
+                <Trash2 className="w-4 h-4" /> Delete All
+              </button>
+            )}
+            <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Upload Syllabus
+            </button>
+          </div>
         </div>
 
         {showUpload && (
