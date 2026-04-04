@@ -17,11 +17,23 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Ensure profile exists (in case the signup trigger didn't fire)
+    const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+    if (!existingProfile) {
+      await supabase.from('profiles').insert({
+        id: user.id,
+        email: user.email ?? '',
+        full_name: user.user_metadata?.full_name ?? null,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+      });
+    }
+
     const body = await req.json();
     const { text } = body;
     if (!text?.trim()) return NextResponse.json({ error: 'No text provided' }, { status: 400 });
 
     const syllabusData = await extractSyllabus(text);
+    console.log('Extracted subjects:', syllabusData.subjects?.length, syllabusData.subjects?.map((s: any) => s.name));
 
     const created = [];
     for (const subj of syllabusData.subjects) {
@@ -49,7 +61,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (created.length === 0) {
-      return NextResponse.json({ error: 'Could not find any subjects in this document. Try pasting the text manually.' }, { status: 422 });
+      return NextResponse.json({
+        error: `AI found ${syllabusData.subjects?.length ?? 0} subjects but could not save them. Check Supabase connection.`,
+        debug: syllabusData.subjects?.map((s: any) => s.name)
+      }, { status: 422 });
     }
     return NextResponse.json({ subjects: created, count: created.length });
   } catch (e) {
