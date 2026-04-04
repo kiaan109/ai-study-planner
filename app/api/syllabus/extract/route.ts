@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { extractSyllabus } from '@/lib/ai/extractSyllabus';
 import { randomColor, randomIcon } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
@@ -34,7 +41,7 @@ export async function POST(req: NextRequest) {
 
         if (chapter && ch.topics?.length) {
           await supabase.from('topics').insert(
-            ch.topics.map((t, j) => ({ chapter_id: chapter.id, name: t, order_index: j }))
+            ch.topics.map((t: string, j: number) => ({ chapter_id: chapter.id, name: t, order_index: j }))
           );
         }
       }

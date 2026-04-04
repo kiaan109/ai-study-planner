@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Subject, Note } from '@/types';
 import { Loader2, Sparkles, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
 
 interface Props {
   subjects: Subject[];
@@ -25,9 +26,10 @@ export default function NotesGenerator({ subjects, defaultSubjectId, defaultChap
     if (!subjectId || !chapterId) { toast.error('Select a subject and chapter'); return; }
     setLoading(true);
     try {
+      const { data: { session } } = await createClient().auth.getSession();
       const res = await fetch('/api/notes/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({
           subjectId, chapterId,
           subjectName: subject?.name ?? '',

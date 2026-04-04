@@ -1,8 +1,9 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Image, AlignLeft, Loader2, CheckCircle, X } from 'lucide-react';
+import { Upload, AlignLeft, Loader2, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
 
 type Mode = 'upload' | 'paste';
 
@@ -46,9 +47,13 @@ export default function SyllabusUpload({ onSuccess }: { onSuccess: () => void })
     if (!content.trim()) { toast.error('No content to process'); return; }
     setLoading(true);
     try {
+      const { data: { session } } = await createClient().auth.getSession();
       const res = await fetch('/api/syllabus/extract', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? ''}`,
+        },
         body: JSON.stringify({ text: content }),
       });
       const data = await res.json();

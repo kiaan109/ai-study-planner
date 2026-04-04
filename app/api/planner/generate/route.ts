@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { generateStudyPlan } from '@/lib/ai/generateStudyPlan';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { title, examDate, hoursPerDay, subjects } = await req.json();
-
     const plan = await generateStudyPlan({ subjects, examDate, hoursPerDay });
 
     const { data: savedPlan } = await supabase
@@ -22,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     if (plan.daily_plans.length > 0) {
       await supabase.from('daily_plans').insert(
-        plan.daily_plans.map(dp => ({
+        plan.daily_plans.map((dp: any) => ({
           plan_id: savedPlan.id,
           date: dp.date,
           subject_name: dp.subject_name,
@@ -33,7 +39,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Award points for plan creation
     try { const { data: p } = await supabase.from('profiles').select('total_points').eq('id', user.id).single(); await supabase.from('profiles').update({ total_points: (p?.total_points ?? 0) + 20 }).eq('id', user.id); } catch { /* optional */ }
 
     return NextResponse.json({ planId: savedPlan.id, daysCount: plan.daily_plans.length });

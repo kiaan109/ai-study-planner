@@ -41,9 +41,10 @@ export default function PlannerPage() {
     if (!examDate || !title) { toast.error('Fill in the title and exam date'); return; }
     setGenerating(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/planner/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({
           title, examDate, hoursPerDay,
           subjects: subjects.map(s => ({ name: s.name, chapters: s.chapters?.map((c: any) => c.name) ?? [] })),
