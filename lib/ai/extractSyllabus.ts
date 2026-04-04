@@ -2,33 +2,34 @@ import { callAI } from './client';
 import { SyllabusData } from '@/types';
 
 export async function extractSyllabus(text: string): Promise<SyllabusData> {
-  const system = `You are an expert academic assistant. Extract ALL subjects/courses from the provided document — it could be a syllabus, schedule, timetable, or any academic document.
+  const system = `You are an expert academic assistant. Extract structured syllabus information from the provided text.
 
-IMPORTANT RULES:
-- Extract EVERY subject/course you can find, even if it's just a list
-- If no chapters are listed, create 3-5 sensible chapter names based on the subject
-- If topics aren't listed, create 3-5 relevant topic names for each chapter
-- A schedule with subject names like "Mathematics", "Science" etc. is valid input — extract all subjects
-- NEVER return an empty subjects array — always find at least something to extract
-- Return ONLY valid JSON, no markdown, no explanation
+CRITICAL RULES — READ CAREFULLY:
+- Extract EVERY subject listed in the document
+- For each subject, extract EVERY chapter/unit/section/topic listed — do NOT skip any, do NOT summarize
+- If a subject lists 12 chapters, return ALL 12. If it lists 20, return ALL 20.
+- Use the exact names from the document — do not paraphrase or rename
+- If topics are listed under a chapter, include them all
+- If no sub-topics are listed, set "topics" to an empty array []
+- Return ONLY valid JSON, absolutely no markdown or extra text
 
 JSON schema:
 {
   "subjects": [
     {
-      "name": "Subject name",
-      "description": "Brief description",
+      "name": "exact subject name from document",
+      "description": "brief one-line description",
       "chapters": [
         {
-          "name": "Chapter name",
-          "topics": ["topic 1", "topic 2", "topic 3"]
+          "name": "exact chapter/unit name from document",
+          "topics": ["exact topic if listed", "another topic"]
         }
       ]
     }
   ]
 }`;
 
-  const prompt = `Extract all subjects and create a structured study plan from this academic document. Even if it's a schedule or timetable, extract every subject listed and generate appropriate chapters and topics for each:\n\n${text.slice(0, 8000)}`;
+  const prompt = `Extract ALL subjects and ALL their chapters/units from this academic document. Include every single chapter listed for each subject — do not limit or summarize:\n\n${text}`;
 
   try {
     const raw = await callAI(system, prompt);
@@ -37,28 +38,15 @@ JSON schema:
       .replace(/```\n?/g, '')
       .trim();
 
-    // Try to extract JSON even if there's extra text around it
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON found in response');
+    if (!jsonMatch) throw new Error('No JSON in response');
 
     const parsed = JSON.parse(jsonMatch[0]) as SyllabusData;
-
-    // If AI still returned empty, throw so we can retry
-    if (!parsed.subjects || parsed.subjects.length === 0) {
-      throw new Error('No subjects extracted');
-    }
+    if (!parsed.subjects || parsed.subjects.length === 0) throw new Error('Empty subjects');
 
     return parsed;
   } catch (e) {
-    console.error('extractSyllabus error:', e);
-    // Fallback: ask AI more directly
-    try {
-      const fallbackPrompt = `List all school subjects/courses found in this text as JSON. Create chapters if none exist:\n\n${text.slice(0, 4000)}`;
-      const raw2 = await callAI(system, fallbackPrompt);
-      const cleaned2 = raw2.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const jsonMatch2 = cleaned2.match(/\{[\s\S]*\}/);
-      if (jsonMatch2) return JSON.parse(jsonMatch2[0]) as SyllabusData;
-    } catch {}
+    console.error('extractSyllabus failed:', e);
     return { subjects: [] };
   }
 }
