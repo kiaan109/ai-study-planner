@@ -31,8 +31,8 @@ export default function SyllabusUpload({ onSuccess }: { onSuccess: () => void })
         const t = await file.text();
         await submitText(t);
       }
-    } catch {
-      toast.error('Failed to process file');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Failed to process file');
     }
     setLoading(false);
   }, []);
@@ -60,8 +60,8 @@ export default function SyllabusUpload({ onSuccess }: { onSuccess: () => void })
       if (!res.ok) throw new Error(data.error);
       toast.success(`Created ${data.count} subject${data.count !== 1 ? 's' : ''}!`);
       onSuccess();
-    } catch {
-      toast.error('Failed to extract syllabus. Please try again.');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Failed to extract syllabus. Please try again.');
     }
     setLoading(false);
   }
