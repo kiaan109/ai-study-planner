@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
       created.push(subject);
     }
 
+    if (created.length === 0) {
+      return NextResponse.json({ error: 'Could not find any subjects in this document. Try pasting the text manually.' }, { status: 422 });
+    }
     return NextResponse.json({ subjects: created, count: created.length });
   } catch (e) {
     console.error(e);
