@@ -20,10 +20,20 @@ Rules:
 - Only include a "diagram" when it genuinely clarifies the concept (a process, cycle, hierarchy, timeline, or relationship). Prefer "flowchart TD" or "mindmap" syntax. Keep node labels short and avoid special characters that break Mermaid parsing (no parentheses or quotes inside node text).
 - Escape backslashes correctly so the JSON parses (e.g. write "\\\\frac{a}{b}" for \\frac{a}{b}).
 - Include 3-6 formulas max, 2-3 examples, 5-8 keyTakeaways, 6-10 flashcards.
-- Ground the answer in any supplied textbook/audio/image context when present; otherwise use your own knowledge.`;
+- Ground the answer in any supplied textbook/audio/image context when present; otherwise use your own knowledge.
+- If "Recent conversation" is supplied, this is a follow-up in an ongoing chat — resolve pronouns and references like "that", "it", "the second one", "go deeper on X" against it. Otherwise treat the question as standalone.`;
 
-function buildUserPrompt(question: string, context?: string) {
-  let prompt = `Student's question / topic: ${question}`;
+export interface HistoryTurn {
+  question: string;
+  summary: string;
+}
+
+function buildUserPrompt(question: string, context?: string, history?: HistoryTurn[]) {
+  let prompt = '';
+  if (history?.length) {
+    prompt += `Recent conversation (oldest first):\n${history.map((h, i) => `${i + 1}. Student asked: "${h.question}" — you answered: "${h.summary}"`).join('\n')}\n\n`;
+  }
+  prompt += `Student's question / topic: ${question}`;
   if (context?.trim()) {
     prompt += `\n\nAdditional context extracted from the student's material (textbook page, notes, or audio transcript):\n"""\n${context.trim().slice(0, 12000)}\n"""`;
   }
@@ -48,9 +58,10 @@ function parse(raw: string): ExplainResult {
 export async function generateExplanation(
   question: string,
   context?: string,
-  images?: string[]
+  images?: string[],
+  history?: HistoryTurn[]
 ): Promise<ExplainResult> {
-  const userPrompt = buildUserPrompt(question, context);
+  const userPrompt = buildUserPrompt(question, context, history);
   const raw = images?.length
     ? await callAIVision(SYSTEM, userPrompt, images)
     : await callAI(SYSTEM, userPrompt);

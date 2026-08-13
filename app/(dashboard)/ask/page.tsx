@@ -1,13 +1,11 @@
 'use client';
 import 'katex/dist/katex.min.css';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Sparkles, Lightbulb, Layers, BookOpenCheck } from 'lucide-react';
+import { Sparkles, Trash2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { PromptInputBox } from '@/components/ui/ai-prompt-box';
-import FormulaBlock from '@/components/ask/FormulaBlock';
-import DiagramBlock from '@/components/ask/DiagramBlock';
-import MarkdownLite from '@/components/ask/MarkdownLite';
+import ResultCard from '@/components/ask/ResultCard';
 import { createClient } from '@/lib/supabase/client';
 import { ExplainResult } from '@/types';
 
@@ -18,6 +16,19 @@ const SUGGESTIONS = [
   'How does photosynthesis work?',
 ];
 
+const STORAGE_KEY = 'studyai_ask_messages';
+const MAX_STORED = 30;
+const MAX_HISTORY_TURNS = 6;
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  question: string;
+  attachments?: string[];
+  result?: ExplainResult;
+  error?: string;
+}
+
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -27,10 +38,33 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function newId() {
+  return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+}
+
 export default function AskPage() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ExplainResult | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setMessages(JSON.parse(raw));
+    } catch { /* ignore corrupt local state */ }
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_STORED))); } catch { /* storage full/unavailable */ }
+  }, [messages, loaded]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, loading]);
 
   async function authHeaders() {
     const { data: { session } } = await createClient().auth.getSession();
@@ -41,12 +75,19 @@ export default function AskPage() {
     if (!message.trim() && files.length === 0) return;
     if (!message.trim()) { toast.error('Type a question or topic first'); return; }
 
+    const userMsg: ChatMessage = { id: newId(), role: 'user', question: message, attachments: files.map((f) => f.name) };
+    const historyForApi = messages
+      .filter((m) => m.role === 'assistant' && m.result)
+      .slice(-MAX_HISTORY_TURNS)
+      .map((m) => ({ question: m.question, summary: m.result!.summary }));
+
+    setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
-    setResult(null);
+    setQuestion('');
+
     try {
       let context = '';
       const images: string[] = [];
-
       for (const file of files) {
         if (file.type === 'application/pdf') {
           const fd = new FormData();
@@ -64,14 +105,16 @@ export default function AskPage() {
       const res = await fetch('/api/ask/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-        body: JSON.stringify({ question: message, context: context.trim(), images }),
+        body: JSON.stringify({ question: message, context: context.trim(), images, history: historyForApi }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setResult(data.result);
-      setQuestion('');
+
+      setMessages((prev) => [...prev, { id: newId(), role: 'assistant', question: message, result: data.result }]);
     } catch (err: any) {
-      toast.error(err?.message ?? 'Something went wrong. Please try again.');
+      const errMsg = err?.message ?? 'Something went wrong. Please try again.';
+      toast.error(errMsg);
+      setMessages((prev) => [...prev, { id: newId(), role: 'assistant', question: message, error: errMsg }]);
     }
     setLoading(false);
   }
@@ -87,38 +130,73 @@ export default function AskPage() {
       if (!res.ok) throw new Error(data.error);
       setQuestion((prev) => (prev ? `${prev} ${data.text}` : data.text));
       toast.success('Transcribed — review and hit send', { id: toastId });
-    } catch {
-      toast.error('Transcription failed', { id: toastId });
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Transcription failed', { id: toastId });
     }
   }
+
+  function clearChat() {
+    setMessages([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* storage unavailable */ }
+  }
+
+  const isEmpty = messages.length === 0;
 
   return (
     <div className="animate-in h-full flex flex-col">
       <Header title="Ask AI" subtitle="Any subject, any format — get explanations, formulas, diagrams and examples instantly" />
-      <div className="flex-1 overflow-y-auto p-6">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto space-y-6">
-          {!result && !loading && (
+          {isEmpty && !loading ? (
             <div className="text-center pt-6 pb-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4" style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
                 <Sparkles className="w-3.5 h-3.5" /> Any subject, instantly
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold mb-2">What do you want to understand?</h1>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                Type a question, attach a textbook page or photo, or record yourself asking it.
+                Type a question, attach a textbook page or photo, or record yourself asking it. Ask follow-ups — I remember this conversation.
               </p>
+            </div>
+          ) : (
+            <div className="flex justify-end -mb-2">
+              <button onClick={clearChat} className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" style={{ color: 'var(--muted)' }}>
+                <Trash2 className="w-3.5 h-3.5" /> New chat
+              </button>
             </div>
           )}
 
-          <PromptInputBox
-            value={question}
-            onValueChange={setQuestion}
-            onSend={handleSend}
-            onVoiceMessage={handleVoiceMessage}
-            isLoading={loading}
-            placeholder="Ask about any subject — formulas, diagrams, concepts…"
-          />
+          {messages.map((m) => (
+            <div key={m.id} className="animate-in">
+              {m.role === 'user' ? (
+                <div className="flex justify-end">
+                  <div className="max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm text-white" style={{ background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)' }}>
+                    {m.question}
+                    {m.attachments && m.attachments.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {m.attachments.map((a, i) => <span key={i} className="text-[10px] bg-white/20 rounded px-1.5 py-0.5">{a}</span>)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : m.error ? (
+                <div className="card border border-red-200 dark:border-red-900/50">
+                  <p className="text-sm font-semibold text-red-500 mb-1">Couldn&apos;t answer that</p>
+                  <p className="text-sm" style={{ color: 'var(--muted)' }}>{m.error}</p>
+                </div>
+              ) : m.result ? (
+                <ResultCard result={m.result} />
+              ) : null}
+            </div>
+          ))}
 
-          {!result && !loading && (
+          {loading && (
+            <div className="card flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>Reading your material and building a full explanation…</p>
+            </div>
+          )}
+
+          {isEmpty && !loading && (
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -132,97 +210,19 @@ export default function AskPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
 
-          {loading && (
-            <div className="card flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>Reading your material and building a full explanation…</p>
-            </div>
-          )}
-
-          {result && !loading && (
-            <div className="space-y-6 animate-in">
-              <div className="card">
-                <h1 className="text-2xl font-extrabold mb-2">{result.title}</h1>
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>{result.summary}</p>
-              </div>
-
-              <div className="card">
-                <MarkdownLite content={result.explanation} />
-              </div>
-
-              {result.formulas.length > 0 && (
-                <div className="card">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Layers className="w-5 h-5 text-purple-500" />
-                    <h3 className="text-lg font-bold">Key formulas</h3>
-                  </div>
-                  <div className="space-y-4">
-                    {result.formulas.map((f, i) => (
-                      <div key={i} className="p-4 rounded-xl" style={{ background: 'var(--bg)' }}>
-                        <p className="font-semibold text-sm mb-1">{f.name}</p>
-                        <FormulaBlock latex={f.latex} />
-                        <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{f.explanation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result.diagram && (
-                <div className="card">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-lg font-bold">{result.diagram.title || 'Diagram'}</h3>
-                  </div>
-                  <DiagramBlock code={result.diagram.mermaid} />
-                </div>
-              )}
-
-              {result.examples.length > 0 && (
-                <div className="card">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BookOpenCheck className="w-5 h-5 text-green-500" />
-                    <h3 className="text-lg font-bold">Worked examples</h3>
-                  </div>
-                  <div className="space-y-4">
-                    {result.examples.map((ex, i) => (
-                      <div key={i} className="p-4 rounded-xl" style={{ background: 'var(--bg)' }}>
-                        <p className="text-sm font-semibold mb-1">Q: {ex.problem}</p>
-                        <p className="text-sm" style={{ color: 'var(--muted)' }}>{ex.solution}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result.keyTakeaways.length > 0 && (
-                <div className="card">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    <h3 className="text-lg font-bold">Key takeaways</h3>
-                  </div>
-                  <ul className="list-disc pl-5 space-y-1.5">
-                    {result.keyTakeaways.map((k, i) => <li key={i} className="text-sm">{k}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              {result.flashcards.length > 0 && (
-                <div className="card">
-                  <h3 className="text-lg font-bold mb-4">Quick flashcards</h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {result.flashcards.map((f, i) => (
-                      <div key={i} className="p-3 rounded-xl border" style={{ borderColor: 'var(--border)' }}>
-                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted)' }}>{f.front}</p>
-                        <p className="text-sm">{f.back}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      <div className="flex-shrink-0 border-t p-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <div className="max-w-3xl mx-auto">
+          <PromptInputBox
+            value={question}
+            onValueChange={setQuestion}
+            onSend={handleSend}
+            onVoiceMessage={handleVoiceMessage}
+            isLoading={loading}
+            placeholder="Ask about any subject — formulas, diagrams, concepts…"
+          />
         </div>
       </div>
     </div>

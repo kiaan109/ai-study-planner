@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { question, context, images } = await req.json();
+    const { question, context, images, history } = await req.json();
     if (!question?.trim()) return NextResponse.json({ error: 'No question provided' }, { status: 400 });
     if (images?.length > 4) return NextResponse.json({ error: 'Too many images (max 4)' }, { status: 400 });
 
-    const result = await generateExplanation(question, context, images);
+    const result = await generateExplanation(question, context, images, history);
 
     try {
       const { data: p } = await supabase.from('profiles').select('total_points').eq('id', user.id).single();
