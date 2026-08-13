@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ result });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: 'Generation failed' }, { status: 500 });
+    const message = e instanceof Error ? e.message : 'Generation failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

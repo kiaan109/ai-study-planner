@@ -1,7 +1,10 @@
 import OpenAI from 'openai';
 
 function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not set on the server — add it in your Vercel project\'s Environment Variables (and redeploy).');
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
 export async function callAI(systemPrompt: string, userPrompt: string): Promise<string> {

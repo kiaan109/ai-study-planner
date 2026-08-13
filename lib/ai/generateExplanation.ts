@@ -51,22 +51,12 @@ export async function generateExplanation(
   images?: string[]
 ): Promise<ExplainResult> {
   const userPrompt = buildUserPrompt(question, context);
+  const raw = images?.length
+    ? await callAIVision(SYSTEM, userPrompt, images)
+    : await callAI(SYSTEM, userPrompt);
   try {
-    const raw = images?.length
-      ? await callAIVision(SYSTEM, userPrompt, images)
-      : await callAI(SYSTEM, userPrompt);
     return parse(raw);
-  } catch (e) {
-    console.error('generateExplanation failed', e);
-    return {
-      title: 'Something went wrong',
-      summary: 'The AI could not generate an explanation. Please try again.',
-      explanation: '',
-      formulas: [],
-      diagram: null,
-      examples: [],
-      keyTakeaways: [],
-      flashcards: [],
-    };
+  } catch {
+    throw new Error('The AI response wasn\'t valid — please try rephrasing your question.');
   }
 }
