@@ -137,3 +137,30 @@ export interface ChartData {
   value: number;
   color?: string;
 }
+
+export interface ExplainFormula {
+  name: string;
+  latex: string;
+  explanation: string;
+}
+
+export interface ExplainExample {
+  problem: string;
+  solution: string;
+}
+
+export interface ExplainDiagram {
+  title: string;
+  mermaid: string;
+}
+
+export interface ExplainResult {
+  title: string;
+  summary: string;
+  explanation: string;
+  formulas: ExplainFormula[];
+  diagram: ExplainDiagram | null;
+  examples: ExplainExample[];
+  keyTakeaways: string[];
+  flashcards: { front: string; back: string }[];
+}

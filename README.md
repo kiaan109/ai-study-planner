@@ -59,6 +59,7 @@ You get a FREE URL like: `https://studyai-yourname.vercel.app`
 | Feature | Description |
 |---------|-------------|
 | 🔐 Auth | Email + Google login via Supabase |
+| 🧠 Ask AI | Any subject, any format — type a question, paste a textbook page, upload a photo/PDF, or record audio. Get a full explanation with LaTeX formulas, a Mermaid diagram, worked examples, key takeaways and flashcards |
 | 📤 Syllabus Upload | PDF, image, or paste text — AI extracts everything |
 | 🤖 AI Notes | Short notes, detailed, key points, exam Qs, flashcards |
 | 📅 Study Planner | AI generates day-by-day schedule from exam date |
@@ -116,5 +117,6 @@ ai-study-planner/
 | `extractSyllabus(text)` | lib/ai/extractSyllabus.ts | Parses syllabus into subjects/chapters/topics |
 | `generateNotes(subject, chapter, topics)` | lib/ai/generateNotes.ts | Creates 5 note types per chapter |
 | `generateStudyPlan(input)` | lib/ai/generateStudyPlan.ts | Builds day-by-day study schedule |
+| `generateExplanation(question, context, images)` | lib/ai/generateExplanation.ts | Full explanation (formulas, Mermaid diagram, examples, flashcards) for any question, textbook excerpt, photo, or audio transcript — powers `/ask` |
 
-All powered by GPT-4o via your OpenAI key.
+All powered by GPT-4o (vision for photos, Whisper for audio) via your OpenAI key.
