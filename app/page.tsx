@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
-import { BookOpen, Brain, Clock, BarChart3, Upload, Zap, CheckCircle, Star, ArrowRight, Sparkles } from 'lucide-react';
+import { BookOpen, Brain, Clock, BarChart3, Upload, Zap, CheckCircle, Star, ArrowRight, Sparkles, MessageSquareText } from 'lucide-react';
 
 const features = [
+  { icon: MessageSquareText, color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600', title: 'Ask AI', desc: 'Type a question, attach a textbook photo or PDF, or record audio — get a full explanation with formulas, diagrams and examples for any subject.' },
   { icon: Upload,   color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',   title: 'Syllabus Upload',    desc: 'Upload PDF, image, or paste text — AI extracts every subject, chapter, and topic instantly.' },
   { icon: Brain,    color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600', title: 'AI-Powered Notes', desc: 'Get short notes, detailed explanations, exam questions, and flashcards generated for each chapter.' },
   { icon: BarChart3,color: 'bg-green-100 dark:bg-green-900/30 text-green-600',  title: 'Smart Study Plans', desc: 'Enter your exam date and available hours — AI builds a day-by-day personalized schedule.' },
@@ -46,14 +47,14 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border" style={{ background: 'rgba(59,130,246,0.08)', borderColor: 'rgba(59,130,246,0.2)', color: '#3b82f6' }}>
             <Sparkles className="w-4 h-4" />
-            Powered by Claude AI · 100% personalized
+            Powered by GPT-4o · 100% personalized
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
-            Study smarter with<br />
-            <span className="gradient-text">AI-powered plans</span>
+            Understand anything with<br />
+            <span className="gradient-text">one AI workspace</span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto" style={{ color: 'var(--muted)' }}>
-            Upload your syllabus. Get instant notes, a personalized study schedule, progress tracking, and more — all in one beautiful workspace.
+            Ask any question, upload your syllabus, or snap a textbook page. Get instant explanations, formulas, diagrams, notes, and a personalized study schedule — all in one workspace.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/signup" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
@@ -211,7 +212,7 @@ export default function LandingPage() {
             </div>
             <span className="font-bold gradient-text">StudyAI</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--muted)' }}>© 2026 StudyAI. Built for students, powered by Claude AI.</p>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>© 2026 StudyAI. Built for students, powered by GPT-4o.</p>
         </div>
       </footer>
     </div>

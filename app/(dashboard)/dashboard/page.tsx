@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/layout/Header';
 import Link from 'next/link';
-import { BookMarked, Clock, BarChart2, Calendar, ArrowRight, Flame, Trophy, Target, TrendingUp } from 'lucide-react';
+import { BookMarked, Clock, BarChart2, Calendar, ArrowRight, Flame, Trophy, Target, TrendingUp, Sparkles } from 'lucide-react';
 
 function StatCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: string | number; sub?: string; color: string }) {
   return (
@@ -80,6 +80,17 @@ export default function DashboardPage() {
           <StatCard icon={Target} label="Chapters done" value={`${completedChapters}/${totalChapters}`} sub={`${totalChapters ? Math.round(completedChapters / totalChapters * 100) : 0}% complete`} color="text-green-600 bg-green-50 dark:bg-green-900/30" />
           <StatCard icon={Flame} label="Study streak" value={`${profile?.streak ?? 0} days`} sub={`${profile?.total_points ?? 0} total points`} color="text-orange-500 bg-orange-50 dark:bg-orange-900/30" />
         </div>
+
+        <Link href="/ask" className="card flex items-center gap-4 p-5 text-white hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200" style={{ background: 'linear-gradient(135deg,#4338ca,#7c3aed 55%,#c026d3)', border: 'none' }}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white/15 backdrop-blur">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold">Ask AI</p>
+            <p className="text-sm text-white/80">Any subject, any format — get a full explanation instantly</p>
+          </div>
+          <ArrowRight className="w-5 h-5 flex-shrink-0 opacity-80" />
+        </Link>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {quickLinks.map(({ href, icon: Icon, label, color }) => (
