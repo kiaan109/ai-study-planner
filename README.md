@@ -21,9 +21,10 @@ Copy `.env.local.example` to `.env.local` and fill in:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-OPENAI_API_KEY=sk-proj-...   ← already configured
+OPENROUTER_API_KEY=sk-or-v1-...   ← free models, get one at openrouter.ai/keys
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+Prefer OpenAI instead (costs money, but needed for audio transcription)? Set `OPENAI_API_KEY=sk-proj-...` instead of/alongside `OPENROUTER_API_KEY` — see `.env.local.example` for both.
 
 ### Step 4 — Run locally
 ```bash
@@ -119,4 +120,4 @@ ai-study-planner/
 | `generateStudyPlan(input)` | lib/ai/generateStudyPlan.ts | Builds day-by-day study schedule |
 | `generateExplanation(question, context, images)` | lib/ai/generateExplanation.ts | Full explanation (formulas, Mermaid diagram, examples, flashcards) for any question, textbook excerpt, photo, or audio transcript — powers `/ask` |
 
-All powered by GPT-4o (vision for photos, Whisper for audio) via your OpenAI key.
+Powered by OpenRouter's free models by default (text + vision), or GPT-4o if you set `OPENAI_API_KEY`. Audio transcription (Whisper) always needs a real `OPENAI_API_KEY` — OpenRouter doesn't proxy speech-to-text.

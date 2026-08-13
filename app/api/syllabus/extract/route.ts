@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { extractSyllabus } from '@/lib/ai/extractSyllabus';
 import { randomColor, randomIcon } from '@/lib/utils';
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const token = req.headers.get('Authorization')?.replace('Bearer ', '');
