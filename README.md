@@ -13,8 +13,8 @@ Download and install from: https://nodejs.org (LTS version)
 1. Go to https://supabase.com → "New project"
 2. Copy your project URL and anon key
 3. In SQL Editor, run the full contents of `supabase/schema.sql`
-4. Enable Google OAuth: Authentication → Providers → Google
-5. Add redirect URL: `https://yoursite.vercel.app/api/auth/callback`
+4. Enable anonymous sign-ins: Authentication → Sign In / Providers → Anonymous Sign-Ins → toggle on
+   (this is what powers the name-only login — no email/password, no OAuth setup needed)
 
 ### Step 3 — Configure environment variables
 Copy `.env.local.example` to `.env.local` and fill in:
@@ -58,7 +58,7 @@ You get a FREE URL like: `https://studyai-yourname.vercel.app`
 
 | Feature | Description |
 |---------|-------------|
-| 🔐 Auth | Email + Google login via Supabase |
+| 🔐 Auth | Name-only sign-in — no email or password, powered by Supabase anonymous auth |
 | 🧠 Ask AI | Any subject, any format — type a question, paste a textbook page, upload a photo/PDF, or record audio. Get a full explanation with LaTeX formulas, a Mermaid diagram, worked examples, key takeaways and flashcards |
 | 📤 Syllabus Upload | PDF, image, or paste text — AI extracts everything |
 | 🤖 AI Notes | Short notes, detailed, key points, exam Qs, flashcards |

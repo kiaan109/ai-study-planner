@@ -36,8 +36,7 @@ export default function LandingPage() {
             <a href="#testimonials" className="hover:text-blue-600 transition-colors">Reviews</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="btn-secondary text-sm">Login</Link>
-            <Link href="/signup" className="btn-primary text-sm">Get Started Free</Link>
+            <Link href="/login" className="btn-primary text-sm">Start Studying Free</Link>
           </div>
         </div>
       </nav>
@@ -57,11 +56,8 @@ export default function LandingPage() {
             Ask any question, upload your syllabus, or snap a textbook page. Get instant explanations, formulas, diagrams, notes, and a personalized study schedule — all in one workspace.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/signup" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
+            <Link href="/login" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
               Start for free <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/login" className="btn-secondary text-base px-8 py-4">
-              Sign in to your account
             </Link>
           </div>
           <p className="mt-6 text-sm" style={{ color: 'var(--muted)' }}>No credit card · Free forever plan available</p>
@@ -196,7 +192,7 @@ export default function LandingPage() {
           <div className="rounded-3xl p-12 text-white" style={{ background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)' }}>
             <h2 className="text-4xl font-extrabold mb-4">Ready to ace your exams?</h2>
             <p className="text-lg opacity-90 mb-8">Join thousands of students already studying smarter with AI.</p>
-            <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-colors text-base">
+            <Link href="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-colors text-base">
               Start for free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

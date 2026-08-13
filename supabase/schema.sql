@@ -1,6 +1,12 @@
 -- ─────────────────────────────────────────────────────────────
 -- AI Study Planner — Supabase Schema
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
+--
+-- Sign-in is name-only (no email/password): the app uses Supabase
+-- anonymous auth, which must be turned on once per project at
+-- Authentication → Sign In / Providers → Anonymous Sign-Ins.
+-- Already ran this schema before? Run supabase/migrations/002_anonymous_auth.sql
+-- too — it relaxes the old NOT NULL email constraint below.
 -- ─────────────────────────────────────────────────────────────
 
 -- Enable extensions
@@ -9,7 +15,7 @@ create extension if not exists "uuid-ossp";
 -- ── profiles ──────────────────────────────────────────────────
 create table public.profiles (
   id            uuid references auth.users on delete cascade primary key,
-  email         text unique not null,
+  email         text unique, -- null for anonymous (name-only) sign-ins
   full_name     text,
   avatar_url    text,
   streak        int default 0,
