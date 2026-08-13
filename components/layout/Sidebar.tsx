@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, LayoutDashboard, BookMarked, FileText, Timer, BarChart2, Calendar, Settings, LogOut, Zap, Sparkles } from 'lucide-react';
+import { BookOpen, LayoutDashboard, BookMarked, FileText, Timer, BarChart2, Calendar, Settings, LogOut, Zap, Sparkles, Calculator } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 const nav = [
   { href: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
   { href: '/ask',        label: 'Ask AI',     icon: Sparkles },
+  { href: '/calculator', label: 'Calculator', icon: Calculator },
   { href: '/subjects',   label: 'Subjects',   icon: BookMarked },
   { href: '/notes',      label: 'Notes',      icon: FileText },
   { href: '/timer',      label: 'Study Timer',icon: Timer },
