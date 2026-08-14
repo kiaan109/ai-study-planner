@@ -82,8 +82,11 @@ async function chatComplete(messages: any[], opts: { vision?: boolean } = {}): P
         return r.choices[0]?.message?.content ?? '';
       });
     } catch (e) {
-      // Every free candidate is gone — fall through to OpenAI below if we have a key.
-      if (!(e instanceof OpenAI.NotFoundError) || !HAS_OPENAI) throw e;
+      // OpenRouter failed for any reason (model gone, rate-limited, unreachable —
+      // "Connection error." included) — fall through to OpenAI below if we have a key,
+      // instead of only doing that for the narrower "model not found" case.
+      console.error('OpenRouter call failed, falling back to OpenAI if configured:', e);
+      if (!HAS_OPENAI) throw e;
     }
   } else if (!HAS_OPENAI) {
     throw new Error('No AI provider configured — set OPENROUTER_API_KEY (free models) or OPENAI_API_KEY in your environment variables, then redeploy.');
