@@ -184,7 +184,7 @@ export default function AskPage() {
                   <p className="text-sm" style={{ color: 'var(--muted)' }}>{m.error}</p>
                 </div>
               ) : m.result ? (
-                <ResultCard result={m.result} />
+                <ResultCard result={m.result} question={m.question} />
               ) : null}
             </div>
           ))}

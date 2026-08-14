@@ -1,14 +1,70 @@
-import { Sparkles, Lightbulb, Layers, BookOpenCheck } from 'lucide-react';
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Sparkles, Lightbulb, Layers, BookOpenCheck, BookMarked, Check, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import FormulaBlock from './FormulaBlock';
 import DiagramBlock from './DiagramBlock';
 import MarkdownLite from './MarkdownLite';
+import { createClient } from '@/lib/supabase/client';
+import { randomColor, randomIcon } from '@/lib/utils';
 import { ExplainResult } from '@/types';
 
-export default function ResultCard({ result }: { result: ExplainResult }) {
+export default function ResultCard({ result, question }: { result: ExplainResult; question?: string }) {
+  const [saving, setSaving] = useState(false);
+  const [savedSubjectId, setSavedSubjectId] = useState<string | null>(null);
+
+  async function saveToSubjects() {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not signed in');
+
+      const { data: subject, error: subjectError } = await supabase
+        .from('subjects')
+        .insert({ user_id: user.id, name: result.title.slice(0, 80), description: result.summary, color: randomColor(), icon: randomIcon() })
+        .select().single();
+      if (subjectError || !subject) throw subjectError ?? new Error('Could not create subject');
+
+      const { data: chapter } = await supabase
+        .from('chapters')
+        .insert({ subject_id: subject.id, name: (question ?? result.title).slice(0, 120), order_index: 0 })
+        .select().single();
+
+      await supabase.from('notes').insert({
+        user_id: user.id,
+        subject_id: subject.id,
+        chapter_id: chapter?.id ?? null,
+        title: result.title,
+        content: result.explanation,
+        type: 'custom',
+      });
+
+      setSavedSubjectId(subject.id);
+      toast.success(`Saved as "${result.title}"`);
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Could not save this to Subjects');
+    }
+    setSaving(false);
+  }
+
   return (
     <div className="space-y-6">
       <div className="card">
-        <h1 className="text-2xl font-extrabold mb-2">{result.title}</h1>
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <h1 className="text-2xl font-extrabold">{result.title}</h1>
+          {savedSubjectId ? (
+            <Link href={`/subjects/${savedSubjectId}`} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 flex-shrink-0">
+              <Check className="w-3.5 h-3.5 text-green-500" /> View subject
+            </Link>
+          ) : (
+            <button onClick={saveToSubjects} disabled={saving} className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-70">
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookMarked className="w-3.5 h-3.5" />}
+              Save to Subjects
+            </button>
+          )}
+        </div>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>{result.summary}</p>
       </div>
 

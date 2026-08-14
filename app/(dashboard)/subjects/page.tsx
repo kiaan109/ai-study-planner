@@ -3,16 +3,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import SyllabusUpload from '@/components/subjects/SyllabusUpload';
+import ManualSubjectForm from '@/components/subjects/ManualSubjectForm';
 import SubjectCard from '@/components/subjects/SubjectCard';
 import { createClient } from '@/lib/supabase/client';
 import { Subject } from '@/types';
-import { Plus, BookOpen, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, BookMarked, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [showManual, setShowManual] = useState(false);
   const supabase = createClient();
   const router = useRouter();
 
@@ -57,11 +59,20 @@ export default function SubjectsPage() {
                 <Trash2 className="w-4 h-4" /> Delete All
               </button>
             )}
-            <button onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
+            <button onClick={() => { setShowManual(true); setShowUpload(false); }} className="btn-secondary flex items-center gap-2">
+              <BookMarked className="w-4 h-4" /> New Subject
+            </button>
+            <button onClick={() => { setShowUpload(true); setShowManual(false); }} className="btn-primary flex items-center gap-2">
               <Plus className="w-4 h-4" /> Upload Syllabus
             </button>
           </div>
         </div>
+
+        {showManual && (
+          <div className="mb-8 max-w-lg">
+            <ManualSubjectForm onSuccess={() => { setShowManual(false); fetchSubjects(); }} onCancel={() => setShowManual(false)} />
+          </div>
+        )}
 
         {showUpload && (
           <div className="mb-8">
@@ -77,8 +88,11 @@ export default function SubjectsPage() {
           <div className="text-center py-20">
             <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-20" />
             <h3 className="text-xl font-bold mb-2">No subjects yet</h3>
-            <p className="mb-6" style={{ color: 'var(--muted)' }}>Upload your syllabus to automatically create subjects and chapters</p>
-            <button onClick={() => setShowUpload(true)} className="btn-primary">Upload Syllabus</button>
+            <p className="mb-6" style={{ color: 'var(--muted)' }}>Add one manually, or upload a syllabus and AI will build it for you</p>
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => setShowManual(true)} className="btn-secondary">New Subject</button>
+              <button onClick={() => setShowUpload(true)} className="btn-primary">Upload Syllabus</button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
